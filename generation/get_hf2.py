@@ -43,7 +43,7 @@ class ScriptArguments:
         metadata={"help": "the number of generations per prompt"},
     )
     max_input_length: Optional[int] = field(
-        default=10000,
+        default=8192,
         metadata={"help": "the maximum length of the input tokens"},
     )
     max_new_tokens: Optional[int] = field(
@@ -85,7 +85,7 @@ llm = LLM(
     dtype="bfloat16",
     max_model_len=script_args.max_input_length,
     load_format="auto",
-    seed=42,
+    seed=seed,
 )
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 

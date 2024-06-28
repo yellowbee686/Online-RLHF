@@ -1,5 +1,5 @@
 source ~/.bashrc
-
+export CUDA_VISIBLE_DEVICES='1,2,3,4'
 # Initialize Conda environment
 eval "$(conda shell.bash hook)"
 

@@ -1,7 +1,7 @@
-# source ~/.bashrc
+source ~/.bashrc
 
 # Initialize Conda environment
-# eval "$(conda shell.bash hook)"
+eval "$(conda shell.bash hook)"
 
 
 # Base paths and settings

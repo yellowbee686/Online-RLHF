@@ -1,7 +1,3 @@
-conda create -n rlhflow python=3.10.9
-conda activate rlhflow
-
-git clone https://github.com/huggingface/alignment-handbook.git
 cd ./alignment-handbook/
 git checkout d17fd7cd3b71c6a7bf7af34d8dc73135bb7ea8e9
 pip3 install torch==2.1.2 torchvision torchaudio

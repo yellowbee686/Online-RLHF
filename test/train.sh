@@ -1,7 +1,7 @@
 model_path=RLHFlow/LLaMA3-SFT
 initial_model=RLHFlow/LLaMA3-SFT
 # mkdir models
-accelerate launch --config_file ./configs/zero2_test.yaml \
+accelerate launch --config_file ./configs/zero2_single.yaml \
   ./dpo_iteration/run_dpo.py \
   --run_name rlhflow_iter1 \
   --output_dir ./models/rlhflow_iter1 \
@@ -13,5 +13,5 @@ accelerate launch --config_file ./configs/zero2_test.yaml \
   --train_dir ./data/data_with_rewards.json \
   --eval_dir ./data/data_with_rewards.json \
   --loss_type sigmoid \
-  --gradient_accumulation_steps 8 \
+  --gradient_accumulation_steps 2 \
   --lr_scheduler_type cosine

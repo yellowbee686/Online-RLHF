@@ -51,7 +51,7 @@ class ScriptArguments:
         metadata={"help": "the maximum length of the new tokens"},
     )
     seed: Optional[int] = field(
-        default=42,
+        default=-1,
         metadata={"help": "the random seed"},
     )
     temperature: Optional[float] = field(
@@ -75,6 +75,8 @@ script_args = parser.parse_args_into_dataclasses()[0]
 model_path = script_args.model_name_or_path
 print("model_path", model_path)
 seed = script_args.seed
+if seed < 0:
+    seed = np.random.randint(1, 1000)
 # set seed
 torch.manual_seed(seed)
 np.random.seed(seed)

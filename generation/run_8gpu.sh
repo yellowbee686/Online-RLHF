@@ -12,11 +12,14 @@ MODEL_PATH=$1
 # 使用for循环启动8个服务实例，每个实例使用不同的GPU和端口
 for i in {0,2,3,4}
 do
-    CUDA_VISIBLE_DEVICES=$i python -m vllm.entrypoints.api_server \
-        --model $MODEL_PATH \
-        --gpu-memory-utilization=0.9 \
-        --max-num-seqs=200 \
-        --host 127.0.0.1 --tensor-parallel-size 1 \
-        --port $((8000+i)) \
-    &
+    for j in {1,2,3,4}
+    do
+        CUDA_VISIBLE_DEVICES=$i python -m vllm.entrypoints.api_server \
+            --model $MODEL_PATH \
+            --gpu-memory-utilization=0.9 \
+            --max-num-seqs=200 \
+            --host 127.0.0.1 --tensor-parallel-size 1 \
+            --port $((8000+j)) \
+        &
+    done
 done

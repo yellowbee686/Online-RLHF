@@ -120,11 +120,11 @@ with torch.no_grad():
         # The VLLM may not generate responses for some prompts because it is too long, we skip them
         if len(sample["responses"]) < script_args.K:
             continue
-        # test_texts = [change_of_format(sample['prompt'], tmp_output) for tmp_output in sample['responses']]
-        test_texts = [
-            sample["prompt"] + script_args.input_output_delimiter + tmp_output.strip()
-            for tmp_output in sample["responses"]
-        ]
+        test_texts = [change_of_format(sample['prompt'], tmp_output) for tmp_output in sample['responses']]
+        # test_texts = [
+        #     sample["prompt"] + script_args.input_output_delimiter + tmp_output.strip()
+        #     for tmp_output in sample["responses"]
+        # ]
         rewards = get_reward(test_texts)
         data.append({"prompt": sample["prompt"], "responses": sample["responses"], "rewards": rewards})
 

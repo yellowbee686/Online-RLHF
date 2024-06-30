@@ -98,7 +98,7 @@ def get_reward(test_texts):
     input_ids = rm_tokenizer.apply_chat_template(test_texts, return_tensors="pt", padding=True).to(device)
     outputs = rm_model(input_ids)
     preference_score = outputs.score.cpu().float()
-    return preference_score
+    return preference_score.tolist()
 
 
 def change_of_format(prom, resp):

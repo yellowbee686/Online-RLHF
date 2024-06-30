@@ -130,7 +130,6 @@ with torch.no_grad():
 
 
 # Send the data to other GPUs
-world_size = int(os.getenv("WORLD_SIZE", "1"))
 all_process_list = [{}] * world_size
 
 data_to_send = {

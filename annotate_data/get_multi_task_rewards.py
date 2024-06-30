@@ -9,6 +9,8 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, HfArgumentParser, AutoModelForSequenceClassification
 from accelerate import Accelerator
 
+import torch.distributed as dist
+
 tqdm.pandas()
 
 #####
@@ -117,6 +119,12 @@ def change_of_format(prom, resp):
     return message
 
 
+def init_distributed(backend='nccl'):
+    dist.init_process_group(backend=backend)
+    # rank = dist.get_rank()
+    # world_size = dist.get_world_size()
+    # return rank, world_size
+
 data = []
 
 # tqdm is used to show the progress bar
@@ -135,22 +143,23 @@ with torch.no_grad():
 
 
 # Send the data to other GPUs
-world_size = int(os.getenv("WORLD_SIZE", "1"))
-all_process_list = [{}] * world_size
+if world_size > 1:
+    init_distributed()
+    all_process_list = [{}] * world_size
+    # TODO: review impl
+    data_to_send = {
+        "data": [[data[i]] for i in range(len(data))],
+    }
 
-data_to_send = {
-    "data": [[data[i]] for i in range(len(data))],
-}
-
-import torch.distributed as dist
-
-dist.all_gather_object(all_process_list, data_to_send)
-gathered_data = []
+    dist.all_gather_object(all_process_list, data_to_send)
+    gathered_data = []
 
 
-for i in range(world_size):
-    tmp_data = [tmp[0] for tmp in all_process_list[i]["data"]]
-    gathered_data.extend(tmp_data)
+    for i in range(world_size):
+        tmp_data = [tmp[0] for tmp in all_process_list[i]["data"]]
+        gathered_data.extend(tmp_data)
+else:
+    gathered_data = data
 
 all_rewards = [sample["rewards"] for sample in gathered_data]
 top1_scores = np.mean(np.max(all_rewards, axis=1))

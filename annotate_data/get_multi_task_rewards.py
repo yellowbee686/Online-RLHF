@@ -93,7 +93,7 @@ We process the data format here and query the reward model to get the rewards.
 
 
 def get_reward(test_texts):
-    input_ids = rm_tokenizer.apply_chat_template(test_texts, return_tensors="pt").to(device)
+    input_ids = rm_tokenizer.apply_chat_template(test_texts, return_tensors="pt", padding=True).to(device)
     outputs = rm_model(input_ids)
     preference_score = outputs.score.cpu().float()
     return preference_score

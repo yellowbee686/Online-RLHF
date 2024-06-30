@@ -107,14 +107,14 @@ def change_of_format(prom, resp):
 
     final_resp = resp.split("GPT4 Correct User")[0]
     """
-    prom = prom
-    final_resp = resp
+    prom = prom.replace(rm_tokenizer.bos_token, "")
+    final_resp = resp.replace(rm_tokenizer.bos_token, "")
 
     message = [
         {"role": "user", "content": prom},
         {"role": "assistant", "content": final_resp},
     ]
-    return message.replace(rm_tokenizer.bos_token, "")
+    return message
 
 
 data = []

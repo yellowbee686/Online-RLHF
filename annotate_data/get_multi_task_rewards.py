@@ -161,15 +161,21 @@ if world_size > 1:
 else:
     gathered_data = data
 
-all_rewards = [sample["rewards"] for sample in gathered_data]
+all_rewards = []
+length = 0
+for sample in gathered_data:
+    all_rewards.append(sample["rewards"])
+    resp = sample["responses"][np.argmax(sample['rewards'])]
+    length += len(resp)
 top1_scores = np.mean(np.max(all_rewards, axis=1))
 mean_scores = np.mean(all_rewards)
+avg_len = length / len(gathered_data)
 
 
 if local_rank == 0:
     print(
-        "Collect {} data from {} inputs. mean score {} top1 score: {}".format(
-            len(gathered_data), data_size, mean_scores, top1_scores
+        "Collect {} data from {} inputs. mean score {} top1 score: {} max_reward_len:{}".format(
+            len(gathered_data), data_size, mean_scores, top1_scores, avg_len
         )
     )
     if len(gathered_data) < data_size:

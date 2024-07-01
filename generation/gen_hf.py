@@ -129,15 +129,19 @@ with ThreadPoolExecutor(max_workers=script_args.max_workers) as executor:
 
 
 gathered_data = []
+length = 0
 for i in range(len(ds)):
     tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i]}
+    length += len(responses[i])
     gathered_data.append(tmp_data)
     print(tmp_data)
 
 output_eval_dataset = {}
 output_eval_dataset["type"] = "text_only"
 output_eval_dataset["instances"] = gathered_data
-print("I collect ", len(gathered_data), "samples")
+cnt = len(gathered_data)
+length /= cnt
+print(f"I collect {cnt} samples, avg_len:{length}")
 
 
 with open(output_dir, "w", encoding="utf8") as f:

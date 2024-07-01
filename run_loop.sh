@@ -30,7 +30,10 @@ run_iteration() {
     pkill -f "python -m vllm.entrypoints.api_server"
     accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
     conda activate rlhflow
-    accelerate launch --config_file ./configs/zero2_single.yaml dpo_iteration/run_dpo.py --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 --max_steps 1200 --choose_type max_min --train_dir $model_output --eval_dir $model_output --loss_type sigmoid --lr_scheduler_type cosine --len_penalty 0.001 --num_train_epochs 1
+    accelerate launch --config_file ./configs/zero2_single.yaml dpo_iteration/run_dpo.py \
+        --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 \
+        --max_steps 1200 --choose_type max_min --train_dir $model_output --eval_dir $model_output --loss_type sigmoid --lr_scheduler_type cosine \
+        --len_penalty 0.001 --num_train_epochs 1 --gradient_accumulation_steps 4
 }
 
 

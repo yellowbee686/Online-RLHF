@@ -10,7 +10,7 @@ fi
 MODEL_PATH=$1
 
 # 使用for循环启动8个服务实例，每个实例使用不同的GPU和端口
-for i in {1,2,3,4}
+for i in {3}
 do
     CUDA_VISIBLE_DEVICES=$i python -m vllm.entrypoints.api_server \
         --model $MODEL_PATH \
@@ -18,5 +18,6 @@ do
         --max-num-seqs=200 \
         --host 127.0.0.1 --tensor-parallel-size 1 \
         --port $((8000+i)) \
+        --uvicorn-log-level warning \
     &
 done

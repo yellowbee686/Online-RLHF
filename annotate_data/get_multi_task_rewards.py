@@ -57,21 +57,7 @@ parser = HfArgumentParser(ScriptArguments)
 script_args = parser.parse_args_into_dataclasses()[0]
 
 device = accelerator.device
-# pipe_kwargs = {
-#     "return_all_scores": True,
-#     "function_to_apply": "none",
-#     "batch_size": 1,
-# }
 reward_model_path = script_args.reward_name_or_path
-# rm_tokenizer = AutoTokenizer.from_pretrained(reward_model)
-# rm_pipe = pipeline(
-#     "sentiment-analysis",
-#     model=reward_model_path,
-#     device=device,
-#     tokenizer=rm_tokenizer,
-#     model_kwargs={"torch_dtype": torch.bfloat16},
-#     truncation=True,
-# )
 
 rm_model = AutoModelForSequenceClassification.from_pretrained(reward_model_path, device_map=device, 
                                trust_remote_code=True, torch_dtype=torch.bfloat16)
@@ -143,24 +129,25 @@ with torch.no_grad():
 
 
 # Send the data to other GPUs
-if world_size > 1:
-    # init_distributed()
-    all_process_list = [{}] * world_size
-    # TODO: review impl
-    data_to_send = {
-        "data": [[data[i]] for i in range(len(data))],
-    }
+# if world_size > 1:
+#     # init_distributed()
+#     all_process_list = [{}] * world_size
+#     # TODO: review impl
+#     data_to_send = {
+#         "data": [[data[i]] for i in range(len(data))],
+#     }
 
-    dist.all_gather_object(all_process_list, data_to_send)
-    gathered_data = []
+#     dist.all_gather_object(all_process_list, data_to_send)
+#     gathered_data = []
 
 
-    for i in range(world_size):
-        tmp_data = [tmp[0] for tmp in all_process_list[i]["data"]]
-        gathered_data.extend(tmp_data)
-else:
-    gathered_data = data
+#     for i in range(world_size):
+#         tmp_data = [tmp[0] for tmp in all_process_list[i]["data"]]
+#         gathered_data.extend(tmp_data)
+# else:
+#     gathered_data = data
 
+gathered_data = data
 all_rewards = []
 length = 0
 for sample in gathered_data:
@@ -172,24 +159,25 @@ mean_scores = np.mean(all_rewards)
 avg_len = length / len(gathered_data)
 
 
-if local_rank == 0:
-    print(
-        "Collect {} data from {} inputs. mean score {} top1 score: {} max_reward_len:{}".format(
-            len(gathered_data), data_size, mean_scores, top1_scores, avg_len
-        )
+# if local_rank == 0:
+print(
+    "local_rank:{} Collect {} data from {} inputs. mean score {} top1 score: {} max_reward_len:{}".format(
+        local_rank, len(gathered_data), data_size, mean_scores, top1_scores, avg_len
     )
-    if len(gathered_data) < data_size:
-        print(
-            "Some of the prompts are with responses < {}. This can happen because the prompt is too long and is ignored by VLLM".format(
-                script_args.K
-            )
-        )
-    output_eval_dataset = {}
-    output_eval_dataset["type"] = "text_only"
-    output_eval_dataset["instances"] = gathered_data
-    with open(script_args.output_dir, "w", encoding="utf8") as f:
-        json.dump(output_eval_dataset, f, ensure_ascii=False)
+)
+# if len(gathered_data) < data_size:
+#     print(
+#         "Some of the prompts are with responses < {}. This can happen because the prompt is too long and is ignored by VLLM".format(
+#             script_args.K
+#         )
+#     )
+output_eval_dataset = {}
+output_eval_dataset["type"] = "text_only"
+output_eval_dataset["instances"] = gathered_data
+output_file = script_args.output_dir + str(local_rank) + '.json'
+with open(output_file, "w", encoding="utf8") as f:
+    json.dump(output_eval_dataset, f, ensure_ascii=False)
 
-    if script_args.record_dir is not None:
-        with open(script_args.record_dir, "a") as f:
-            f.write(str(mean_scores) + "\t" + str(top1_scores) + "\n")
+if script_args.record_dir is not None:
+    with open(script_args.record_dir, "a") as f:
+        f.write(str(mean_scores) + "\t" + str(top1_scores) + "\n")

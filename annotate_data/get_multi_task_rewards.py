@@ -144,7 +144,7 @@ with torch.no_grad():
 
 # Send the data to other GPUs
 if world_size > 1:
-    init_distributed()
+    # init_distributed()
     all_process_list = [{}] * world_size
     # TODO: review impl
     data_to_send = {

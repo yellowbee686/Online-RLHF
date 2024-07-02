@@ -132,14 +132,15 @@ gathered_data = []
 length = 0
 for i in range(len(ds)):
     tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i]}
-    length += len(responses[i])
+    for resp in responses:
+        length += len(resp)
     gathered_data.append(tmp_data)
     print(tmp_data)
 
 output_eval_dataset = {}
 output_eval_dataset["type"] = "text_only"
 output_eval_dataset["instances"] = gathered_data
-cnt = len(gathered_data)
+cnt = len(gathered_data) * K
 length /= cnt
 print(f"I collect {cnt} samples, avg_len:{length}")
 

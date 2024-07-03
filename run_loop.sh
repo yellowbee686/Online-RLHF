@@ -23,16 +23,17 @@ run_iteration() {
     local json_output=$4
     local model_output=$5
     local model_output_file=$6
+    local i=$7
 
-    conda activate vllm
-    if [ "$iteration" -gt 1 ]; then
+    if [ $i -gt 1 ]; then
+        conda activate vllm
         bash generation/run_8gpu.sh $model_path
         sleep 60
         python generation/gen_hf.py --ports 8002 8003 8004 8005 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
         pkill -f "python -m vllm.entrypoints.api_server"
+        accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
+        python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4
     fi
-    accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
-    python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4
     conda activate rlhflow
     accelerate launch --config_file ./configs/zero2_test.yaml dpo_iteration/run_dpo.py \
         --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 \
@@ -58,7 +59,7 @@ do
         model_path="LLaMA3_iter${previous_iteration}"
     fi
 
-    run_iteration $iteration_name $model_path $jsonl_input $json_output $model_output $model_output_file
+    run_iteration $iteration_name $model_path $jsonl_input $json_output $model_output $model_output_file $i
 done
 
 

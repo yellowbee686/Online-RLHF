@@ -25,12 +25,11 @@ run_iteration() {
     local model_output_file=$6
     local i=$7
     conda activate vllm
-    if [ $i -gt 4 ]; then
+    if [ $i -gt 3 ]; then
         bash generation/run_8gpu.sh $model_path
         sleep 60
         python generation/gen_hf.py --ports 8002 8003 8004 8005 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
         pkill -f "python -m vllm.entrypoints.api_server"
-        
     fi
     accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
     python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4

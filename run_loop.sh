@@ -25,7 +25,7 @@ run_iteration() {
     local model_output_file=$6
     local i=$7
     conda activate vllm
-    if [ $i -gt 3 ]; then
+    if [ $i -gt 4 ]; then
         bash generation/run_8gpu.sh $model_path
         sleep 60
         python generation/gen_hf.py --ports 8002 8003 8004 8005 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
@@ -43,7 +43,7 @@ run_iteration() {
 
 
 # Main loop for iterations
-for i in {3..9}
+for i in {4..9}
 do
     iteration_name="LLaMA3_iter${i}"
     jsonl_input="RLHFlow/iterative-prompt-v1-iter${i}-20K"

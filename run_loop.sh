@@ -25,7 +25,7 @@ run_iteration() {
     local model_output_file=$6
     local i=$7
     
-    if [ $i -gt 3 ]; then
+    if [ $i -gt 4 ]; then
         conda activate vllm
         bash generation/run_8gpu.sh $model_path
         sleep 60

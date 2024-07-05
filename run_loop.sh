@@ -34,7 +34,7 @@ run_iteration() {
         accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
         python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4
     fi
-    conda activate rlhflow
+    conda activate test_train
     accelerate launch --config_file ./configs/zero2_test.yaml dpo_iteration/run_dpo.py \
         --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 \
         --max_steps 1200 --choose_type max_min --train_dir $model_output_file --eval_dir $model_output_file --loss_type sigmoid --lr_scheduler_type cosine \

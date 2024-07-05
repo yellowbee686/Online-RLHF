@@ -85,7 +85,7 @@ class ScriptArguments:
     choose_type: Optional[str] = field(default="max_random", metadata={"help": "the choose type"})
 
     report_to: Optional[str] = field(
-        default="wandb",
+        default="none",
         metadata={
             "help": 'The list of integrations to report the results and logs to. Supported platforms are `"azure_ml"`,'
             '`"comet_ml"`, `"mlflow"`, `"neptune"`, `"tensorboard"`,`"clearml"` and `"wandb"`. '
@@ -269,7 +269,7 @@ if __name__ == "__main__":
         evaluation_strategy="steps",
         eval_steps=script_args.eval_steps,
         output_dir=script_args.output_dir,
-        # report_to=script_args.report_to,
+        report_to=script_args.report_to,
         lr_scheduler_type=script_args.lr_scheduler_type,
         warmup_steps=script_args.warmup_steps,
         # optim=script_args.optimizer_type,

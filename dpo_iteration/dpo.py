@@ -422,8 +422,12 @@ class PreferenceTrainer(DPOTrainer):
         margin = torch.tensor(batch["margin"], dtype=policy_chosen_logps.dtype).to(self.accelerator.device)
 
         # for tdpo
-        chosen_position_kl = self.get_position_kl(batch['chosen_labels'], policy_chosen_logits, ref_chosen_logits)
-        rejected_position_kl = self.get_position_kl(batch['rejected_labels'], policy_rejected_logits, ref_rejected_logits)
+        # chosen_labels rejected_labels没经过concatenated_labels对齐
+        len_chosen = batch["chosen_labels"].shape[0]
+        chosen_labels = batch['concatenated_labels'][:len_chosen]
+        rejected_labels = batch['concatenated_labels'][len_chosen:]
+        chosen_position_kl = self.get_position_kl(chosen_labels, policy_chosen_logits, ref_chosen_logits)
+        rejected_position_kl = self.get_position_kl(rejected_labels, policy_rejected_logits, ref_rejected_logits)
 
         losses, chosen_rewards, rejected_rewards = self.dpo_loss(
             policy_chosen_logps,

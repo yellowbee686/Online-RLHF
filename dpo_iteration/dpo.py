@@ -17,6 +17,7 @@ from transformers import (
 from transformers.trainer_callback import TrainerCallback
 from transformers.trainer_utils import EvalLoopOutput
 from trl import DPOTrainer
+from trl.trainer.utils import pad_to_length
 
 # Define and parse arguments.
 
@@ -423,9 +424,14 @@ class PreferenceTrainer(DPOTrainer):
 
         # for tdpo
         # chosen_labels rejected_labels没经过concatenated_labels对齐
-        len_chosen = batch["chosen_labels"].shape[0]
-        chosen_labels = batch['concatenated_labels'][:len_chosen]
-        rejected_labels = batch['concatenated_labels'][len_chosen:]
+        chosen_labels = batch["chosen_labels"]
+        rejected_labels = batch["rejected_labels"]
+        max_length = max(chosen_labels.shape[1], rejected_labels.shape[1])
+        if chosen_labels.shape[1] < max_length:
+            chosen_labels = pad_to_length(chosen_labels, max_length, pad_value=self.tokenizer.pad_token_id)
+        elif rejected_labels.shape[1] < max_length:
+            rejected_labels = pad_to_length(rejected_labels, max_length, pad_value=self.tokenizer.pad_token_id)
+        
         chosen_position_kl = self.get_position_kl(chosen_labels, policy_chosen_logits, ref_chosen_logits)
         rejected_position_kl = self.get_position_kl(rejected_labels, policy_rejected_logits, ref_rejected_logits)
 

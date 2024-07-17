@@ -209,7 +209,7 @@ class PreferenceTrainer(DPOTrainer):
         model: Union[PreTrainedModel, nn.Module] = None,
         ref_model: Optional[Union[PreTrainedModel, nn.Module]] = None,
         beta: float = 0.1,
-        loss_type: Literal["sigmoid", "hinge", "cross_entropy", "kl", "rev_kl", "raft"] = "rev_kl",
+        loss_type: Literal["sigmoid", "hinge", "cross_entropy", "kl", "rev_kl", "raft", "tdpo"] = "rev_kl",
         args: TrainingArguments = None,
         data_collator: Optional[DataCollator] = None,
         label_pad_token_id: int = -100,
@@ -284,6 +284,8 @@ class PreferenceTrainer(DPOTrainer):
         policy_rejected_logps: torch.FloatTensor,
         reference_chosen_logps: torch.FloatTensor,
         reference_rejected_logps: torch.FloatTensor,
+        chosen_position_kl: torch.FloatTensor,
+        rejected_position_kl: torch.FloatTensor,
         reference_free: bool = False,
         margin: Optional[torch.FloatTensor] = None,
         len_penalty: float = 0,
@@ -347,11 +349,26 @@ class PreferenceTrainer(DPOTrainer):
             logp_neg = F.logsigmoid(-self.beta * logits)
             p_gt = F.sigmoid(margin)
             losses = -p_gt * (logp) - (1 - p_gt) * logp_neg
+        elif self.loss_type == 'tdpo':
+            tdpo_alpha = 0.5
+
+            chosen_logps_margin = policy_chosen_logps - reference_chosen_logps
+            rejected_logps_margin = policy_rejected_logps - reference_rejected_logps
+            # chosen_values = chosen_logps_margin + chosen_position_kl
+            # rejected_values = rejected_logps_margin + rejected_position_kl
+            chosen_rejected_logps_margin = chosen_logps_margin - rejected_logps_margin
+            logits = chosen_rejected_logps_margin - tdpo_alpha * (rejected_position_kl - chosen_position_kl.detach())
+
+            losses = -F.logsigmoid(self.beta * logits)
         else:
             raise ValueError(f"Unknown loss type: {self.loss_type}.")
 
-        chosen_rewards = self.beta * (policy_chosen_logps - reference_chosen_logps).detach()
-        rejected_rewards = self.beta * (policy_rejected_logps - reference_rejected_logps).detach()
+        if self.loss_type == 'tdpo':
+            chosen_rewards = self.beta * (policy_chosen_logps - reference_chosen_logps + chosen_position_kl).detach()
+            rejected_rewards = self.beta * (policy_rejected_logps - reference_rejected_logps + rejected_position_kl).detach()
+        else:
+            chosen_rewards = self.beta * (policy_chosen_logps - reference_chosen_logps).detach()
+            rejected_rewards = self.beta * (policy_rejected_logps - reference_rejected_logps).detach()
 
         return losses, chosen_rewards, rejected_rewards
 
@@ -383,15 +400,15 @@ class PreferenceTrainer(DPOTrainer):
                     (
                         reference_chosen_logps,
                         reference_rejected_logps,
-                        _,
-                        _,
+                        ref_chosen_logits,
+                        ref_rejected_logits,
                     ) = self.concatenated_forward(self.model, batch)
             else:
                 (
                     reference_chosen_logps,
                     reference_rejected_logps,
-                    _,
-                    _,
+                    ref_chosen_logits,
+                    ref_rejected_logits,
                 ) = self.concatenated_forward(self.ref_model, batch)
         if self.len_penalty > 0:
             chosen_len = batch["chosen_input_ids"].shape[1] * self.len_penalty
@@ -403,11 +420,18 @@ class PreferenceTrainer(DPOTrainer):
             len_penalty = 0
 
         margin = torch.tensor(batch["margin"], dtype=policy_chosen_logps.dtype).to(self.accelerator.device)
+
+        # for tdpo
+        chosen_position_kl = self.get_position_kl(batch['chosen_labels'], policy_chosen_logits, ref_chosen_logits)
+        rejected_position_kl = self.get_position_kl(batch['rejected_labels'], policy_rejected_logits, ref_rejected_logits)
+
         losses, chosen_rewards, rejected_rewards = self.dpo_loss(
             policy_chosen_logps,
             policy_rejected_logps,
             reference_chosen_logps,
             reference_rejected_logps,
+            chosen_position_kl,
+            rejected_position_kl,
             margin=margin,
             len_penalty=len_penalty,
         )
@@ -424,3 +448,17 @@ class PreferenceTrainer(DPOTrainer):
         metrics[f"{prefix}logits/chosen"] = policy_chosen_logits.detach().cpu().mean()
 
         return losses.mean(), metrics
+
+    def get_position_kl(self, labels, logits, reference_logits):
+        labels = labels[:, 1:].clone()
+        logits = logits[:, :-1, :]
+        reference_logits = reference_logits[:, :-1, :]
+        loss_mask = (labels != self.tokenizer.pad_token_id)
+
+        vocab_logps = logits.log_softmax(-1)
+        reference_vocab_ps = reference_logits.softmax(-1)
+        reference_vocab_logps = reference_vocab_ps.log()
+
+        per_position_kl = (reference_vocab_ps * (reference_vocab_logps - vocab_logps)).sum(-1)
+        per_position_kl = (per_position_kl * loss_mask).sum(-1)
+        return per_position_kl

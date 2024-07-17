@@ -1,5 +1,5 @@
 source ~/.bashrc
-export CUDA_VISIBLE_DEVICES='1,2,3,4'
+export CUDA_VISIBLE_DEVICES='6,7'
 # Initialize Conda environment
 eval "$(conda shell.bash hook)"
 
@@ -25,26 +25,28 @@ run_iteration() {
     local model_output_file=$6
     local i=$7
 
-    conda activate vllm
+    
     if [ $i -gt 5 ]; then
+        conda activate vllm
         bash generation/run_8gpu.sh $model_path
         sleep 60
-        python generation/gen_hf.py --ports 8001 8002 8003 8004 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
+        python generation/gen_hf.py --ports 8001 8002 8003 8004 8005 8006 8007 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
         pkill -f "python -m vllm.entrypoints.api_server"
+        accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
+        python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4
     fi
-    accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
-    python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4
+    
     conda activate test_online
     sleep 5
     accelerate launch --config_file ./configs/zero2_test.yaml dpo_iteration/run_dpo.py \
         --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 \
-        --max_steps 1200 --choose_type max_min --train_dir $model_output_file --eval_dir $model_output_file --loss_type sigmoid --lr_scheduler_type cosine \
+        --max_steps 1200 --choose_type max_min --train_dir $model_output_file --eval_dir $model_output_file --loss_type tdpo --lr_scheduler_type cosine \
         --len_penalty 0.001 --num_train_epochs 2 --gradient_accumulation_steps 16
 }
 
 
 # Main loop for iterations
-for i in {5..9}
+for i in {1..9}
 do
     iteration_name="LLaMA3_iter${i}"
     jsonl_input="RLHFlow/iterative-prompt-v1-iter${i}-20K"

@@ -46,7 +46,7 @@ run_iteration() {
 
 
 # Main loop for iterations
-for i in {9}
+for i in {9..9}
 do
     iteration_name="LLaMA3_iter${i}"
     jsonl_input="RLHFlow/iterative-prompt-v1-iter${i}-20K"

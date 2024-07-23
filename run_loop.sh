@@ -26,7 +26,7 @@ run_iteration() {
     local i=$7
 
     
-    if [ $i -gt 8 ]; then
+    if [ $i -gt 9 ]; then
         conda activate vllm
         bash generation/run_8gpu.sh $model_path
         sleep 60
@@ -46,7 +46,7 @@ run_iteration() {
 
 
 # Main loop for iterations
-for i in {8..9}
+for i in {9}
 do
     iteration_name="LLaMA3_iter${i}"
     jsonl_input="RLHFlow/iterative-prompt-v1-iter${i}-20K"

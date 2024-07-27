@@ -249,6 +249,7 @@ if __name__ == "__main__":
     eval_dataset = prepare_data(
         data_dir=script_args.eval_dir,
         sanity_check=True,
+        choose_type=script_args.choose_type, # eval with same choose_type as train
         margin_scale=script_args.margin_scale,
         eot_token=script_args.eot_token,
     )

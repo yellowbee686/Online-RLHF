@@ -2,7 +2,8 @@ source ~/.bashrc
 export CUDA_VISIBLE_DEVICES='4,5,6,7'
 eval "$(conda shell.bash hook)"
 
-model_path="LLaMA3_iter9"
+# model_path="LLaMA3_iter9"
+model_path="RLHFlow/LLaMA3-SFT"
 jsonl_input="openai/gsm8k"
 
 

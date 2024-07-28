@@ -215,5 +215,5 @@ correct_rate = correct_cnt * 1.0 / cnt
 print(f"I collect {cnt} samples, avg_len:{length}, correct_rate:{correct_rate}")
 
 
-with open(output_dir, "w", encoding="utf8") as f:
-    json.dump(output_eval_dataset, f, ensure_ascii=False)
+# with open(output_dir, "w", encoding="utf8") as f:
+#     json.dump(output_eval_dataset, f, ensure_ascii=False)

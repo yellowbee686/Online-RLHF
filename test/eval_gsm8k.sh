@@ -14,7 +14,6 @@ python eval/eval_gsm8k.py \
     --eos_ids 128009 \
     --tokenizer $model_path \
     --dataset_name_or_path $jsonl_input \
-    --output_dir $json_output \
     --K 1 \
     --temperature 0.0 \
     --ds_split 'test' \

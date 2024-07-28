@@ -167,7 +167,7 @@ default_args = {
 
 print(default_args)
 
-ds = load_dataset(ds_dir, split=script_args.ds_split)
+ds = load_dataset(ds_dir, name='main', split=script_args.ds_split)
 # load_dataset("json", data_files=ds_dir, split="train", field="instances")
 print(ds)
 

@@ -136,7 +136,7 @@ gathered_data = []
 length = 0
 for i in range(len(ds)):
     tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i]}
-    for resp in responses:
+    for resp in responses[i]:
         length += len(resp)
     gathered_data.append(tmp_data)
     # print(tmp_data)

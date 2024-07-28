@@ -195,13 +195,14 @@ gathered_data = []
 length = 0
 correct_cnt = 0
 for i in range(len(ds)):
-    res_answer = extract_answer(responses[i])
     gt_answer = extract_answer(ds[i]["answer"])
+    res_answer = extract_answer(responses[i][0])
+    
     is_correct = res_answer == gt_answer
     if res_answer == gt_answer:
         correct_cnt += 1
     tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i], "res_answer": res_answer, "gt_answer": gt_answer, "is_correct": is_correct}
-    for resp in responses:
+    for resp in responses[i]:
         length += len(resp)
     gathered_data.append(tmp_data)
     print(tmp_data)

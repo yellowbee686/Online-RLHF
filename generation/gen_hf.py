@@ -70,6 +70,10 @@ class ScriptArguments:
         default=1024,
         metadata={"help": "the number of workers"},
     )
+    ds_split: Optional[str] = field(
+        default="train",
+        metadata={"help": "the split of dataset"},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -105,7 +109,7 @@ default_args = {
 
 print(default_args)
 
-ds = load_dataset(ds_dir, split="train")
+ds = load_dataset(ds_dir, split=script_args.ds_split)
 # load_dataset("json", data_files=ds_dir, split="train", field="instances")
 print(ds)
 
@@ -135,7 +139,7 @@ for i in range(len(ds)):
     for resp in responses:
         length += len(resp)
     gathered_data.append(tmp_data)
-    print(tmp_data)
+    # print(tmp_data)
 
 output_eval_dataset = {}
 output_eval_dataset["type"] = "text_only"

@@ -4,8 +4,8 @@ eval "$(conda shell.bash hook)"
 
 # model_path="LLaMA3_iter9"
 # model_path="RLHFlow/LLaMA3-SFT"
-# model_path="meta-llama/Meta-Llama-3-8B-Instruct"
-model_path="/mnt/raid5/xc/rlhf_online/exps/dpo_armo_sigmoid_lc/LLaMA3_iter4"
+model_path="meta-llama/Meta-Llama-3-8B-Instruct"
+# model_path="/mnt/raid5/xc/rlhf_online/exps/dpo_armo_sigmoid_lc/LLaMA3_iter4"
 jsonl_input="openai/gsm8k"
 
 

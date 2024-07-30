@@ -5,7 +5,8 @@ export CUDA_VISIBLE_DEVICES='2,3'
 # model_path="LLaMA3_iter2"
 # model_path="RLHFlow/LLaMA3-SFT"
 # model_path="meta-llama/Meta-Llama-3-8B-Instruct"
-model_path="/mnt/raid5/xc/rlhf_online/exps/tdpo_armo_lc_online/LLaMA3_iter4"
+# model_path="/mnt/raid5/xc/rlhf_online/exps/tdpo_armo_lc_online/LLaMA3_iter5"
+model_path=$1
 jsonl_input="openai/gsm8k"
 
 

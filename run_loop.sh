@@ -30,9 +30,9 @@ run_iteration() {
         conda activate vllm
         bash generation/run_8gpu.sh $model_path
         sleep 60
-        python generation/gen_hf.py --ports 8004 8005 8006 8007 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 16 --temperature 1.0
+        python generation/gen_hf.py --ports 8004 8005 8006 8007 --eos_ids 128009 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
         pkill -f "python -m vllm.entrypoints.api_server"
-        accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 16
+        accelerate launch annotate_data/get_multi_task_rewards.py --dataset_name_or_path $json_output --output_dir $model_output --K 8
         python ./generation/merge_data.py --base_path $model_output --output_dir $model_output_file --num_datasets 4
     fi
     
@@ -41,7 +41,7 @@ run_iteration() {
     accelerate launch --config_file ./configs/zero2_test.yaml dpo_iteration/run_dpo.py \
         --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 \
         --max_steps 1200 --choose_type max_min --train_dir $model_output_file --eval_dir $model_output_file --loss_type tdpo --lr_scheduler_type cosine \
-        --len_penalty 0.001 --num_train_epochs 2 --gradient_accumulation_steps 16
+        --len_penalty 0.0001 --num_train_epochs 2 --gradient_accumulation_steps 16
 }
 
 

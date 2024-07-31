@@ -1,5 +1,5 @@
 # source ~/.bashrc
-export CUDA_VISIBLE_DEVICES='2,3'
+export CUDA_VISIBLE_DEVICES='2'
 # eval "$(conda shell.bash hook)"
 
 # model_path="LLaMA3_iter2"
@@ -14,7 +14,7 @@ conda activate vllm
 bash generation/eval_vllm.sh $model_path
 sleep 60
 python eval/eval_gsm8k.py \
-    --ports 8002 8003 \
+    --ports 8002 \
     --eos_ids 128009 \
     --tokenizer $model_path \
     --dataset_name_or_path $jsonl_input \

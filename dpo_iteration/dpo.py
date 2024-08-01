@@ -460,15 +460,17 @@ class PreferenceTrainer(DPOTrainer):
         return losses.mean(), metrics
 
     def get_position_kl(self, labels, logits, reference_logits):
-        labels = labels[:, 1:].clone()
+        labels = labels[:, 1:].clone() # 等于过tokenizer的input_ids
         logits = logits[:, :-1, :]
         reference_logits = reference_logits[:, :-1, :]
-        loss_mask = (labels != self.tokenizer.pad_token_id)
+        loss_mask = (labels != self.tokenizer.pad_token_id) # 非pad均为1
 
         vocab_logps = logits.log_softmax(-1)
         reference_vocab_ps = reference_logits.softmax(-1)
         reference_vocab_logps = reference_vocab_ps.log()
 
+        # 计算每一位的kl散度
         per_position_kl = (reference_vocab_ps * (reference_vocab_logps - vocab_logps)).sum(-1)
+        # 将seq_len维度的kl散度求和
         per_position_kl = (per_position_kl * loss_mask).sum(-1)
         return per_position_kl

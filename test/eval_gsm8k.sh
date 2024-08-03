@@ -14,7 +14,7 @@ conda activate vllm
 bash generation/eval_vllm.sh $model_path
 sleep 60
 python eval/eval_gsm8k.py \
-    --ports 8004,8005,8006,8007 \
+    --ports 8004 8005 8006 8007 \
     --eos_ids 128009 \
     --tokenizer $model_path \
     --dataset_name_or_path $jsonl_input \

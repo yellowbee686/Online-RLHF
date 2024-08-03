@@ -1,5 +1,5 @@
 # source ~/.bashrc
-export CUDA_VISIBLE_DEVICES='2'
+export CUDA_VISIBLE_DEVICES='1'
 # eval "$(conda shell.bash hook)"
 
 # model_path="LLaMA3_iter2"

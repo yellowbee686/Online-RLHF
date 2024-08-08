@@ -12,7 +12,7 @@ jsonl_input="openai/gsm8k"
 
 conda activate vllm
 bash generation/eval_vllm.sh $model_path
-sleep 60
+sleep 20
 python eval/eval_gsm8k.py \
     --ports 8001 \
     --eos_ids 128009 \

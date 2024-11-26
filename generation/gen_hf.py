@@ -31,7 +31,7 @@ class ScriptArguments:
         metadata={"help": "the location of the dataset name or path"},
     )
     output_dir: Optional[str] = field(
-        default="uf_split0_responses_K8.json",
+        default="uf_split0_responses_K8.jsonl",
         metadata={"help": "the location of the output file"},
     )
     bos_format: Optional[str] = field(
@@ -135,19 +135,25 @@ with ThreadPoolExecutor(max_workers=script_args.max_workers) as executor:
 gathered_data = []
 length = 0
 for i in range(len(ds)):
-    tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i]}
-    for resp in responses[i]:
-        length += len(resp)
+#     tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i]}
+#     for resp in responses[i]:
+#         length += len(resp)
+#     gathered_data.append(tmp_data)
+#     # print(tmp_data)
+
+# output_eval_dataset = {}
+# output_eval_dataset["type"] = "text_only"
+# output_eval_dataset["instances"] = gathered_data
+# cnt = len(gathered_data) * K
+# length /= cnt
+# print(f"I collect {cnt} samples, avg_len:{length}")
+    tmp_data = {"prompt": ds[i][script_args.dataset_key], "responses": responses[i]}
     gathered_data.append(tmp_data)
-    # print(tmp_data)
 
-output_eval_dataset = {}
-output_eval_dataset["type"] = "text_only"
-output_eval_dataset["instances"] = gathered_data
-cnt = len(gathered_data) * K
-length /= cnt
-print(f"I collect {cnt} samples, avg_len:{length}")
+print("I collect ", len(gathered_data), "samples")
 
 
-with open(output_dir, "w", encoding="utf8") as f:
-    json.dump(output_eval_dataset, f, ensure_ascii=False)
+with open(output_dir, 'w', encoding='utf8') as f:
+    for i in range(len(gathered_data)):
+        json.dump(gathered_data[i], f, ensure_ascii=False)
+        f.write('\n')
